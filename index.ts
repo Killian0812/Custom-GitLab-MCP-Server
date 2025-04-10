@@ -488,11 +488,11 @@ async function reviewCode(
   const comments: string[] = [];
 
   // Naming standards
-  const namingRegex = /^[a-z0-9_-]+$/; // Lowercase, numbers, underscores, hyphens only
+  const namingRegex = /^[a-z0-9_.-]+$/; // Lowercase, numbers, underscores, hyphens, and dots only
   const reservedWords = ["delete", "update", "create"]; // Example reserved words
 
   // Coding standards
-  const maxLineLength = 120;
+  const maxLineLength = 200;
   const requiredTestPattern = /(test|spec)/i;
 
   for (const change of changes.changes) {
@@ -507,7 +507,7 @@ async function reviewCode(
     const fileName = filePath.split("/").pop() || "";
     if (!namingRegex.test(fileName)) {
       comments.push(
-        `File ${filePath} does not follow naming conventions: use lowercase letters, numbers, underscores, or hyphens only.`
+        `File ${filePath} does not follow naming conventions: use lowercase letters, numbers, underscores, hyphens, and dots only.`
       );
     }
     if (reservedWords.some((word) => fileName.includes(word))) {

@@ -296,10 +296,10 @@ async function reviewCode(projectId, mergeRequestIid, ignoreFiles = []) {
     const changes = await getMergeRequestChanges(projectId, mergeRequestIid);
     const comments = [];
     // Naming standards
-    const namingRegex = /^[a-z0-9_-]+$/; // Lowercase, numbers, underscores, hyphens only
+    const namingRegex = /^[a-z0-9_.-]+$/; // Lowercase, numbers, underscores, hyphens, and dots only
     const reservedWords = ["delete", "update", "create"]; // Example reserved words
     // Coding standards
-    const maxLineLength = 120;
+    const maxLineLength = 200;
     const requiredTestPattern = /(test|spec)/i;
     for (const change of changes.changes) {
         const filePath = change.new_path;
@@ -310,7 +310,7 @@ async function reviewCode(projectId, mergeRequestIid, ignoreFiles = []) {
         // Check naming conventions
         const fileName = filePath.split("/").pop() || "";
         if (!namingRegex.test(fileName)) {
-            comments.push(`File ${filePath} does not follow naming conventions: use lowercase letters, numbers, underscores, or hyphens only.`);
+            comments.push(`File ${filePath} does not follow naming conventions: use lowercase letters, numbers, underscores, hyphens, and dots only.`);
         }
         if (reservedWords.some((word) => fileName.includes(word))) {
             comments.push(`File ${filePath} contains reserved word(s). Avoid using: ${reservedWords.join(", ")}.`);
