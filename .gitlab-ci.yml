@@ -1,7 +1,6 @@
 stages:
   - build
   - deploy
-  - redeploy
 
 variables:
   DOCKER_HOST: tcp://docker:2375
@@ -20,26 +19,13 @@ build:
   script:
     - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
     - docker build -t $GCP_IMAGE_REPO:$GCP_IMAGE_TAG .
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-deploy:
-  image: docker:27.3.1-dind
-  stage: deploy
-  services:
-    - docker:27.3.1-dind
-  before_script:
-    - until docker info; do sleep 1; done
-    - base64 -d $GKE_CICD_SA_KEY | docker login -u _json_key --password-stdin $GCP_AR_URL
-  script:
-    - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
     - docker push $GCP_IMAGE_REPO:$GCP_IMAGE_TAG
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-redeploy:
+deploy:
   image: nothingdhsp/gitlab-gcp:latest
-  stage: redeploy
+  stage: deploy
   services:
     - docker:27.3.1-dind
   variables:
