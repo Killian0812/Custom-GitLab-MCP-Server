@@ -1,0 +1,38 @@
+{
+  "name": "@modelcontextprotocol/server-gitlab",
+  "version": "0.6.2",
+  "description": "MCP server for using the GitLab API",
+  "license": "MIT",
+  "author": "GitLab, PBC (https://gitlab.com)",
+  "homepage": "https://modelcontextprotocol.io",
+  "bugs": "https://github.com/modelcontextprotocol/servers/issues",
+  "type": "module",
+  "bin": {
+    "mcp-server-gitlab": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "nodemon dist/index.js",
+    "devts": "nodemon --exec \"node --loader ts-node/esm --no-warnings=ExperimentalWarning\" index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.0.1",
+    "@types/node-fetch": "^2.6.12",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "ts-node": "^10.9.2",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "shx": "^0.3.4",
+    "typescript": "^5.8.3"
+  }
+}
