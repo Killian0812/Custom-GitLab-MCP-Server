@@ -1,5 +1,8 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.2 [fix] (Cursor AI)
+- Fixed Dockerfile to use npm install --omit=dev instead of npm ci --only=production
+
 ## 1.0.1 [fix] (Cursor AI)
 - Fixed Dockerfile to use npm install instead of npm ci
 - Updated version tracking
