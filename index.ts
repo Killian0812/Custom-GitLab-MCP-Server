@@ -48,6 +48,7 @@ import {
   type GitLabTree,
   type GitLabCommit,
   type FileOperation,
+  ReviewMergeRequestSchema,
 } from "./schemas.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
@@ -400,6 +401,152 @@ async function createRepository(
   return GitLabRepositorySchema.parse(await response.json());
 }
 
+async function getMergeRequestChanges(
+  projectId: string,
+  mergeRequestIid: number
+): Promise<any> {
+  const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
+    projectId
+  )}/merge_requests/${mergeRequestIid}/changes`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitLab API error: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+async function approveMergeRequest(
+  projectId: string,
+  mergeRequestIid: number
+): Promise<void> {
+  const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
+    projectId
+  )}/merge_requests/${mergeRequestIid}/approve`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitLab API error: ${response.statusText}`);
+  }
+}
+
+async function addMergeRequestComment(
+  projectId: string,
+  mergeRequestIid: number,
+  body: string
+): Promise<void> {
+  const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
+    projectId
+  )}/merge_requests/${mergeRequestIid}/notes`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ body }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitLab API error: ${response.statusText}`);
+  }
+}
+
+const defaultIgnoreFiles = [
+  ".gitignore",
+  "VERSION.md", "pubspec.yaml",
+  "pubspec.lock", "README.md",
+  "LICENSE", "LICENSE.md",
+  "package.json",
+  "package-lock.json",
+];
+
+// Single review_code function with naming/coding standards
+async function reviewCode(
+  projectId: string,
+  mergeRequestIid: number,
+  ignoreFiles: string[] = []
+): Promise<{ approved: boolean; comments: string[] }> {
+  // Merge the default ignore files with the provided ones
+  ignoreFiles = [...new Set([...defaultIgnoreFiles, ...ignoreFiles])];
+
+  const changes = await getMergeRequestChanges(projectId, mergeRequestIid);
+  const comments: string[] = [];
+
+  // Naming standards
+  const namingRegex = /^[a-z0-9_-]+$/; // Lowercase, numbers, underscores, hyphens only
+  const reservedWords = ["delete", "update", "create"]; // Example reserved words
+
+  // Coding standards
+  const maxLineLength = 120;
+  const requiredTestPattern = /(test|spec)/i;
+
+  for (const change of changes.changes) {
+    const filePath = change.new_path;
+
+    // Skip ignored files
+    if (ignoreFiles.includes(filePath)) {
+      continue;
+    }
+
+    // Check naming conventions
+    const fileName = filePath.split("/").pop() || "";
+    if (!namingRegex.test(fileName)) {
+      comments.push(
+        `File ${filePath} does not follow naming conventions: use lowercase letters, numbers, underscores, or hyphens only.`
+      );
+    }
+    if (reservedWords.some((word) => fileName.includes(word))) {
+      comments.push(
+        `File ${filePath} contains reserved word(s). Avoid using: ${reservedWords.join(
+          ", "
+        )}.`
+      );
+    }
+
+    // Check coding standards for JS/TS files
+    if (filePath.endsWith(".js") || filePath.endsWith(".ts")) {
+      const diffLines = change.diff.split("\n");
+
+      // Check line length
+      const longLines = diffLines.filter(
+        (line: string) => line.startsWith("+") && line.length > maxLineLength
+      );
+      if (longLines.length > 0) {
+        comments.push(
+          `File ${filePath} has lines exceeding ${maxLineLength} characters. Please keep lines shorter.`
+        );
+      }
+
+      // Check for test references
+      if (!requiredTestPattern.test(change.diff)) {
+        comments.push(
+          `File ${filePath} lacks test references (e.g., 'test' or 'spec'). Please add tests.`
+        );
+      }
+    }
+  }
+
+  return {
+    approved: comments.length === 0,
+    comments,
+  };
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
@@ -450,6 +597,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "create_branch",
         description: "Create a new branch in a GitLab project",
         inputSchema: zodToJsonSchema(CreateBranchSchema),
+      },
+      {
+        name: "review_code",
+        description:
+          "Review a merge request for naming and coding standards, approving if met or commenting if not",
+        inputSchema: zodToJsonSchema(ReviewMergeRequestSchema),
       },
     ],
   };
@@ -574,6 +727,60 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             { type: "text", text: JSON.stringify(mergeRequest, null, 2) },
           ],
         };
+      }
+
+      case "review_code": {
+        const args = ReviewMergeRequestSchema.parse(request.params.arguments);
+        const review = await reviewCode(
+          args.project_id,
+          args.merge_request_iid,
+          args.ignore_files
+        );
+
+        if (review.approved) {
+          await approveMergeRequest(args.project_id, args.merge_request_iid);
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "approved",
+                    message:
+                      "Merge request meets naming and coding standards. Approved successfully.",
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } else {
+          for (const comment of review.comments) {
+            await addMergeRequestComment(
+              args.project_id,
+              args.merge_request_iid,
+              comment
+            );
+          }
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "comments_added",
+                    comments: review.comments,
+                    message:
+                      "Merge request does not meet standards. Comments added.",
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
       }
 
       default:

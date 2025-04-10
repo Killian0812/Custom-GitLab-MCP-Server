@@ -324,6 +324,15 @@ export const CreateBranchSchema = ProjectParamsSchema.extend({
   ref: z.string().optional().describe("Source branch/commit for new branch"),
 });
 
+export const ReviewMergeRequestSchema = z.object({
+  project_id: z.string().describe("The ID or URL-encoded path of the project"),
+  merge_request_iid: z
+    .number()
+    .describe("The internal ID of the merge request"),
+  ignore_files: z
+    .array(z.string())
+});
+
 // Export types
 export type GitLabAuthor = z.infer<typeof GitLabAuthorSchema>;
 export type GitLabFork = z.infer<typeof GitLabForkSchema>;
@@ -351,3 +360,4 @@ export type GitLabCreateUpdateFileResponse = z.infer<
   typeof GitLabCreateUpdateFileResponseSchema
 >;
 export type GitLabSearchResponse = z.infer<typeof GitLabSearchResponseSchema>;
+export type MergeRequestReview = z.infer<typeof ReviewMergeRequestSchema>;
