@@ -1,11 +1,14 @@
 stages:
   - build
   - deploy
+  - redeploy
 
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ''
   GCP_IMAGE_REPO: $GCP_AR_URL/$GCP_PROJECT/docker/gitlab-mr-reviewer
+  K8S_NAMESPACE: gitlab-mr-reviewer
+  K8S_DEPLOYMENT: gitlab-mr-reviewer
 
 build:
   image: docker:27.3.1-dind
@@ -31,5 +34,24 @@ deploy:
   script:
     - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
     - docker push $GCP_IMAGE_REPO:$GCP_IMAGE_TAG
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+redeploy:
+  image: nothingdhsp/gitlab-gcp:latest
+  stage: redeploy
+  services:
+    - docker:27.3.1-dind
+  variables:
+    GCP_IMAGE_REPO: $GCP_AR_URL/$GCP_PROJECT/docker/gitlab-mr-reviewer
+  before_script:
+    - until docker info; do sleep 1; done
+    - base64 -d $GKE_CICD_SA_KEY | docker login -u _json_key --password-stdin $GCP_AR_URL
+    - base64 -d $GKE_CICD_SA_KEY > sa.json && gcloud auth activate-service-account $GKE_CICD_SA --key-file sa.json --project=$GCP_PROJECT
+    - gcloud container clusters get-credentials $GKE_NAME --region $GKE_REGION
+  script:
+    - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
+    - echo "deploy gitlab-mr-reviewer. version = ${GCP_IMAGE_TAG}"
+    - kubectl set image deployment/$K8S_DEPLOYMENT -n $K8S_NAMESPACE $K8S_DEPLOYMENT=$GCP_IMAGE_REPO:$GCP_IMAGE_TAG
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
