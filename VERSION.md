@@ -1,5 +1,10 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.6 [feat] (Cursor AI)
+- Updated Dockerfile to properly handle TypeScript compilation
+- Added multi-stage build process for smaller production image
+- Fixed container startup issues with proper working directory
+
 ## 1.0.5 [feat] (Cursor AI)
 - Converted codebase from JavaScript to TypeScript
 - Added strict TypeScript configuration and type definitions

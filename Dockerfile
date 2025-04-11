@@ -1,3 +1,20 @@
+FROM node:18-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install all dependencies including dev dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
 FROM node:18-alpine
 
 WORKDIR /usr/src/app
@@ -5,14 +22,14 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
+# Install production dependencies only
 RUN npm install --omit=dev
 
-# Copy source code
-COPY . .
+# Copy built files from builder stage
+COPY --from=builder /usr/src/app/dist ./dist
 
 # Expose port
 EXPOSE 3000
 
 # Start the server
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/app.js"]
