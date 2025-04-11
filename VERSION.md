@@ -1,5 +1,11 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.5 [feat] (Cursor AI)
+- Converted codebase from JavaScript to TypeScript
+- Added strict TypeScript configuration and type definitions
+- Implemented stricter ESLint rules
+- Fixed TypeScript version compatibility issues
+
 ## 1.0.4 [feat] (Cursor AI)
 - Added automatic redeployment to Kubernetes after image push
 - Added kubectl set image command to update deployment
