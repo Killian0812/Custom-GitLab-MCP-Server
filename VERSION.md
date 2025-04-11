@@ -55,4 +55,13 @@
 ## 1.0.0 [feat] (Cursor AI)
 - Initial setup of GitLab MR Reviewer
 - Added Docker configuration
-- Added GitLab CI/CD pipeline for building and deploying to Google Cloud Artifact Registry 
+- Added GitLab CI/CD pipeline for building and deploying to Google Cloud Artifact Registry
+
+# Version History
+
+## v1.0.11 (2025-04-11)
+- Fixed Kubernetes namespace configuration in CI/CD pipeline
+- Updated deployment namespace from gitlab-mr-reviewer to mmenu-prod
+
+## v1.0.10 (2025-04-11)
+// ... existing code ... 

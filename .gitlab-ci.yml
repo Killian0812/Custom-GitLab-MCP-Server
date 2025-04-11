@@ -6,7 +6,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ''
   GCP_IMAGE_REPO: $GCP_AR_URL/$GCP_PROJECT/docker/gitlab-mr-reviewer
-  K8S_NAMESPACE: gitlab-mr-reviewer
+  K8S_NAMESPACE: mmenu-prod
   K8S_DEPLOYMENT: gitlab-mr-reviewer
 
 build:
