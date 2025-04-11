@@ -24,7 +24,7 @@ import {
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { readFileSync } from "fs";
 import { join } from "path";
-import gitlabCallToolController from "./controller/gitlab.controller";
+import callToolController from "./controller/call-tool.controller";
 
 const server = new Server(
   {
@@ -99,7 +99,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-server.setRequestHandler(CallToolRequestSchema, gitlabCallToolController);
+server.setRequestHandler(CallToolRequestSchema, callToolController);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function runServer() {

@@ -13,9 +13,10 @@ import {
 } from "../schemas";
 import { CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
 import { gitlabService } from "../services/gitlab.service";
+import { codeReviewService } from "../services/code-review.service";
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const gitlabCallToolController = async (request: CallToolRequest) => {
+const callToolController = async (request: CallToolRequest) => {
   try {
     if (!request.params.arguments) {
       throw new Error("Arguments are required");
@@ -144,7 +145,7 @@ const gitlabCallToolController = async (request: CallToolRequest) => {
 
       case "review_code": {
         const args = ReviewMergeRequestSchema.parse(request.params.arguments);
-        const review = await gitlabService.reviewCode(
+        const review = await codeReviewService.reviewCode(
           args.project_id,
           args.merge_request_iid,
           args.ignore_files
@@ -214,4 +215,4 @@ const gitlabCallToolController = async (request: CallToolRequest) => {
   }
 };
 
-export default gitlabCallToolController;
+export default callToolController;
