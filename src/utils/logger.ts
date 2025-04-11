@@ -2,7 +2,7 @@ import winston from 'winston';
 import { config } from '../../config/config';
 
 const logger = winston.createLogger({
-  level: config.logger.level,
+  level: config?.logger?.level || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json(),
