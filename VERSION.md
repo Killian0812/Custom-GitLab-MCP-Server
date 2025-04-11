@@ -1,5 +1,11 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.10 (2025-04-11)
+- Fixed TypeScript configuration and build process
+- Removed old JavaScript files that have been converted to TypeScript
+- Updated TypeScript configuration files
+- Fixed the build process to properly handle both development and production environments
+
 ## 1.0.9 [feat] (Cursor AI)
 - Fixed TypeScript build errors and linting issues
 - Added proper type definitions for Claude service

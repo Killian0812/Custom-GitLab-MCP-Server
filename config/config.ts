@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Load environment variables from .env file in the root directory
+dotenv.config();
 
 interface Config {
   env: string;
