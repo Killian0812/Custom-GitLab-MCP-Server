@@ -1,5 +1,12 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.9 [feat] (Cursor AI)
+- Fixed TypeScript build errors and linting issues
+- Added proper type definitions for Claude service
+- Improved error handling in webhook routes
+- Removed unused code and functions
+- Added proper return types for all functions
+
 ## 1.0.8 [feat] (Cursor AI)
 - Converted remaining JavaScript files to TypeScript (app.js, gitlab.service.js, webhook.route.js)
 - Added proper type definitions for Express routes and middleware

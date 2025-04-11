@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 import { config } from '../../config/config';
 import { GitLabMergeRequest, GitLabFileChange, GitLabComment } from '../types/gitlab.types';
 
@@ -8,8 +8,8 @@ class GitLabService {
   private readonly token: string;
 
   constructor() {
-    this.baseUrl = config.gitlab.baseUrl;
-    this.token = config.gitlab.token;
+    this.baseUrl = config.gitlab.apiUrl;
+    this.token = config.gitlab.privateToken;
   }
 
   async getChangedFiles(projectId: number, mergeRequestIid: number): Promise<GitLabFileChange[]> {
