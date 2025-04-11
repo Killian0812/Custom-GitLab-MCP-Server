@@ -325,7 +325,7 @@ class GitLabService {
   async getMergeRequestChanges(
     projectId: string,
     mergeRequestIid: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
       projectId
@@ -365,6 +365,8 @@ class GitLabService {
     mergeRequestIid: number,
     body: string
   ): Promise<void> {
+    if (!body) return;
+
     const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
       projectId
     )}/merge_requests/${mergeRequestIid}/notes`;
