@@ -1,27 +1,33 @@
+import { GitLabComment } from './gitlab.types';
+
 export interface FileReview {
   path: string;
   review: string;
 }
 
 export interface ChecklistResult {
-  status: boolean;
-  message: string;
-}
-
-export interface ChecklistResults {
-  [key: string]: ChecklistResult;
+  [key: string]: boolean;
 }
 
 export interface ReviewData {
-  projectId: number;
   mergeRequestIid: number;
-  recommendation: 'APPROVE' | 'REJECT' | 'NEEDS_CHANGES';
+  projectId: number;
+  comments: GitLabComment[];
+  recommendation: 'APPROVE' | 'REJECT' | 'NEEDS_WORK';
   fileReviews: FileReview[];
   overallReview: string;
-  checklistResults: ChecklistResults;
+  checklistResults: ChecklistResult;
 }
 
-export interface FileData {
-  path: string;
-  content: string;
+export interface WebhookData {
+  object_kind: string;
+  event_type: string;
+  project: {
+    id: number;
+  };
+  object_attributes: {
+    iid: number;
+    action: string;
+    state: string;
+  };
 }

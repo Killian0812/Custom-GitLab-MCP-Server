@@ -32,4 +32,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 EXPOSE 3000
 
 # Start the server
-CMD ["node", "dist/app.js"]
+CMD ["node", "dist/src/app.js"]

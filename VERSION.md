@@ -1,5 +1,17 @@
 # Gitlab MR Reviewer Release Version
 
+## 1.0.8 [feat] (Cursor AI)
+- Converted remaining JavaScript files to TypeScript (app.js, gitlab.service.js, webhook.route.js)
+- Added proper type definitions for Express routes and middleware
+- Improved error handling with TypeScript type checking
+- Updated Dockerfile with correct TypeScript build paths
+
+## 1.0.7 [feat] (Cursor AI)
+- Converted code-review.service to TypeScript
+- Added proper type definitions for review-related interfaces
+- Improved error handling with TypeScript type checking
+- Fixed TypeScript compilation issues in CI/CD pipeline
+
 ## 1.0.6 [feat] (Cursor AI)
 - Updated Dockerfile to properly handle TypeScript compilation
 - Added multi-stage build process for smaller production image

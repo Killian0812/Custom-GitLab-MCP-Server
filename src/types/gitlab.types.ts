@@ -11,6 +11,7 @@ export interface GitLabMergeRequest {
   target_branch: string;
   work_in_progress: boolean;
   web_url: string;
+  changes: GitLabFileChange[];
 }
 
 export interface GitLabFileChange {
@@ -59,6 +60,16 @@ export interface GitLabComment {
   system: boolean;
   noteable_type: string;
   noteable_id: number;
+  position: {
+    base_sha: string;
+    start_sha: string;
+    head_sha: string;
+    old_path: string;
+    new_path: string;
+    position_type: string;
+    old_line: number | null;
+    new_line: number;
+  };
 }
 
 export interface GitLabDiscussion extends GitLabComment {
