@@ -78,10 +78,10 @@ export interface GitLabDiscussion extends GitLabComment {
     start_sha: string;
     head_sha: string;
     position_type: string;
-    new_path?: string;
-    new_line?: number;
-    old_path?: string;
-    old_line?: number;
+    new_path: string;
+    new_line: number;
+    old_path: string;
+    old_line: number | null;
   };
 }
 

@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { logger } from './utils/logger';
+import logger from './utils/logger';
 import { webhookRouter } from './routes/webhook.route';
 
 const app = express();

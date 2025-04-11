@@ -1,9 +1,9 @@
 import logger from '../utils/logger';
 import slack from '../utils/slack';
-import gitlabService from './gitlab.service';
+import { gitlabService } from './gitlab.service';
 import claudeService from './claude.service';
-import { ReviewData, WebhookData, ChecklistResult } from '../types/review.types';
-import { GitLabFileChange } from '../types/gitlab.types';
+import { ReviewData, FileReview, ChecklistResult } from '../types/review.types';
+import { GitLabFileChange, GitLabMergeRequest } from '../types/gitlab.types';
 
 const getFileExtension = (filePath: string): string => {
   const extension = filePath.split('.').pop()?.toLowerCase() || '';
@@ -21,9 +21,12 @@ const reviewFile = async (
   mergeRequestIid: number,
   file: GitLabFileChange,
   sourceBranch: string,
-): Promise<void> => {
+): Promise<FileReview> => {
   if (file.deleted_file) {
-    return;
+    return {
+      path: file.new_path,
+      review: 'File deleted, no review needed.'
+    };
   }
 
   const fileContent = await gitlabService.getFileContent(projectId, file.new_path, sourceBranch);
@@ -33,11 +36,10 @@ const reviewFile = async (
     languageType,
   );
 
-  await gitlabService.postMergeRequestComment(
-    projectId,
-    mergeRequestIid,
-    `### AI Code Review for \`${file.new_path}\`\n\n${fileReview.review}`,
-  );
+  return {
+    path: file.new_path,
+    review: fileReview.review
+  };
 };
 
 const formatChecklistComment = (checklistResults: ChecklistResult): string => {
@@ -67,9 +69,10 @@ const reviewMergeRequest = async (projectId: number, mergeRequestIid: number): P
     const filesToReview = changedFiles.filter(shouldReviewFile);
 
     // Review each file
-    const fileReviews = [];
+    const fileReviews: FileReview[] = [];
     for (const file of filesToReview) {
-      await reviewFile(projectId, mergeRequestIid, file, mrDetails.source_branch);
+      const review = await reviewFile(projectId, mergeRequestIid, file, mrDetails.source_branch);
+      fileReviews.push(review);
     }
 
     // Evaluate checklist
@@ -84,26 +87,10 @@ const reviewMergeRequest = async (projectId: number, mergeRequestIid: number): P
     // Generate overall review with checklist results
     const overallReview = await claudeService.getOverallReview(mrDetails, fileReviews, checklistResults);
 
-    // Post overall review comment
-    await gitlabService.postMergeRequestComment(
-      projectId,
-      mergeRequestIid,
-      `# AI Code Review Summary\n\n${overallReview}`,
-    );
-
     // Extract recommendation
     const recommendation = claudeService.extractRecommendation(overallReview);
 
-    // Approve if recommendation is APPROVE
-    if (recommendation === 'APPROVE') {
-      await gitlabService.approveMergeRequest(projectId, mergeRequestIid);
-    }
-
-    // Post checklist compliance comment
-    const checklistComment = formatChecklistComment(checklistResults);
-    await gitlabService.postMergeRequestComment(projectId, mergeRequestIid, checklistComment);
-
-    // Send notification
+    // Create review data
     const reviewData: ReviewData = {
       projectId,
       mergeRequestIid,
@@ -111,6 +98,7 @@ const reviewMergeRequest = async (projectId: number, mergeRequestIid: number): P
       fileReviews,
       overallReview,
       checklistResults,
+      comments: [] // Initialize empty comments array
     };
 
     await slack.sendReviewCompletedNotification(reviewData);
@@ -124,39 +112,6 @@ const reviewMergeRequest = async (projectId: number, mergeRequestIid: number): P
   }
 };
 
-/**
- * Handle merge request webhook
- * @param webhookData - Webhook payload
- */
-const handleMergeRequestWebhook = async (webhookData: WebhookData): Promise<void> => {
-  try {
-    const { project, object_attributes } = webhookData;
-
-    // Only process merge request events
-    if (webhookData.object_kind !== 'merge_request') {
-      return;
-    }
-
-    // Only process open/update actions
-    if (!['open', 'update'].includes(object_attributes.action)) {
-      return;
-    }
-
-    // Only process open state
-    if (object_attributes.state !== 'opened') {
-      return;
-    }
-
-    await reviewMergeRequest(project.id, object_attributes.iid);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(`Error handling webhook: ${errorMessage}`);
-    await slack.sendErrorMessage(`Error handling webhook: ${errorMessage}`);
-    throw error;
-  }
-};
-
 export default {
-  reviewMergeRequest,
-  handleMergeRequestWebhook,
+  reviewMergeRequest
 }; 
