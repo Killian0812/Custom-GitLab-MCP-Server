@@ -25,6 +25,15 @@ class ChatGptService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async reviewChanges(changes: any[]): Promise<ReviewResult> {
+    const content = JSON.stringify(changes);
+    if (content.length > 30000) {
+      return {
+        score: 0,
+        overallComment:
+          "The changeset is too large to review effectively. Score: 0",
+        specificComments: [],
+      };
+    }
     try {
       const response = await axios.post(
         `${this.apiUrl}/chat/completions`,
@@ -44,7 +53,7 @@ class ChatGptService {
             },
             {
               role: "user",
-              content: JSON.stringify(changes),
+              content: content,
             },
           ],
         },

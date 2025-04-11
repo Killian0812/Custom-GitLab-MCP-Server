@@ -42,6 +42,15 @@ class CodeReviewService {
       (change: any) => !ignoreFiles.includes(change.new_path)
     );
 
+    const MAX_CHANGES_THRESHOLD = 10;
+    if (filteredChanges.length > MAX_CHANGES_THRESHOLD) {
+      return {
+        score: 0,
+        overallComment: "Number of changed files is too large to review effectively. Score: 0",
+        specificComments: [],
+      };
+    }
+
     // Use LLM to review the changes
     const reviewResult = await chatGptService.reviewChanges(filteredChanges);
 
