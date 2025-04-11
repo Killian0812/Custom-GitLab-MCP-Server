@@ -1,6 +1,6 @@
 {
   "name": "gitlab-mr-reviewer",
-  "version": "1.0.5",
+  "version": "1.0.4",
   "description": "AI-powered GitLab merge request reviewer",
   "main": "dist/app.js",
   "scripts": {
