@@ -10,15 +10,18 @@ variables:
   K8S_DEPLOYMENT: gitlab-mr-reviewer
 
 build:
-  image: docker:27.3.1-dind
+  image: docker:latest-dind
   stage: build
   services:
-    - docker:27.3.1-dind
+    - docker:latest-dind
   before_script:
     - until docker info; do sleep 1; done
     - base64 -d $GKE_CICD_SA_KEY | docker login -u _json_key --password-stdin $GCP_AR_URL
+    - apk add --no-cache nodejs npm
+    - npm install
   script:
-    - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
+    - npm run build
+    - GCP_IMAGE_TAG=$(node -p "require('./version.json').version")
     - docker build -t $GCP_IMAGE_REPO:$GCP_IMAGE_TAG .
     - docker push $GCP_IMAGE_REPO:$GCP_IMAGE_TAG
   rules:
@@ -28,14 +31,14 @@ deploy:
   image: nothingdhsp/gitlab-gcp:latest
   stage: deploy
   services:
-    - docker:27.3.1-dind
+    - docker:latest-dind
   before_script:
     - until docker info; do sleep 1; done
     - base64 -d $GKE_CICD_SA_KEY | docker login -u _json_key --password-stdin $GCP_AR_URL
     - base64 -d $GKE_CICD_SA_KEY > sa.json && gcloud auth activate-service-account $GKE_CICD_SA --key-file sa.json --project=$GCP_PROJECT
     - gcloud container clusters get-credentials $GKE_NAME --region $GKE_REGION
   script:
-    - GCP_IMAGE_TAG=`cat version.json | sed "s/[^0-9\.]//g"`
+    - GCP_IMAGE_TAG=$(node -p "require('./version.json').version")
     - echo "deploy gitlab-mr-reviewer. version = ${GCP_IMAGE_TAG}"
     - kubectl set image deployment/$K8S_DEPLOYMENT -n $K8S_NAMESPACE $K8S_DEPLOYMENT=$GCP_IMAGE_REPO:$GCP_IMAGE_TAG
   rules:
