@@ -1,3 +1,4 @@
+// gitlab.service.ts
 import axios from "axios";
 import { z } from "zod";
 
@@ -381,6 +382,80 @@ class GitLabService {
         },
       }
     );
+  }
+
+  async createDiscussion(
+    projectId: string,
+    mergeRequestIid: number,
+    comment: string,
+    filePath: string,
+    line: number
+  ): Promise<void> {
+    if (!comment) return;
+
+    // Fetch merge request changes to get diff context
+    const changes = await this.getMergeRequestChanges(
+      projectId,
+      mergeRequestIid
+    );
+    const diffRefs = changes.diff_refs;
+
+    // Find the diff for the specified filePath
+    const fileDiff = changes.changes.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (change: any) =>
+        change.new_path === filePath || change.old_path === filePath
+    );
+
+    if (!fileDiff) return;
+
+    // Validate line number (basic check; GitLab API will validate further)
+    const isNewLine = fileDiff.diff.includes(`+`);
+    if (!isNewLine) {
+      // If no new lines in diff, fall back to regular comment
+      await this.addMergeRequestComment(
+        projectId,
+        mergeRequestIid,
+        `${comment} (Note: Could not create discussion thread for ${filePath}:${line} as no new lines found)`
+      );
+      return;
+    }
+
+    const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
+      projectId
+    )}/merge_requests/${mergeRequestIid}/discussions`;
+
+    const body = {
+      body: comment,
+      position: {
+        base_sha: diffRefs.base_sha,
+        start_sha: diffRefs.start_sha,
+        head_sha: diffRefs.head_sha,
+        position_type: "text",
+        new_path: filePath,
+        new_line: line,
+      },
+    };
+
+    try {
+      await axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      // If discussion creation fails (e.g., invalid line), fall back to regular comment
+      console.error(
+        `Failed to create discussion for ${filePath}:${line}:`,
+        error
+      );
+      await this.addMergeRequestComment(
+        projectId,
+        mergeRequestIid,
+        `${comment} (Note: Failed to create discussion thread for ${filePath}:${line})`
+      );
+    }
   }
 }
 

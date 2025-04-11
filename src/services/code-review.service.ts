@@ -1,6 +1,15 @@
 import { gitlabService } from "./gitlab.service";
-// import { claudeService } from "./claude.service";
 import { chatGptService } from "./chatgpt.service";
+
+interface ReviewResult {
+  score: number;
+  overallComment: string;
+  specificComments: Array<{
+    filePath: string;
+    line: number;
+    comment: string;
+  }>;
+}
 
 class CodeReviewService {
   defaultIgnoreFiles = [
@@ -19,7 +28,7 @@ class CodeReviewService {
     projectId: string,
     mergeRequestIid: number,
     ignoreFiles: string[] = []
-  ): Promise<{ approved: boolean; comments: string[] }> {
+  ): Promise<ReviewResult> {
     ignoreFiles = [...new Set([...this.defaultIgnoreFiles, ...ignoreFiles])];
 
     const changes = await gitlabService.getMergeRequestChanges(
@@ -36,10 +45,7 @@ class CodeReviewService {
     // Use LLM to review the changes
     const reviewResult = await chatGptService.reviewChanges(filteredChanges);
 
-    return {
-      approved: reviewResult.approved,
-      comments: reviewResult.comments,
-    };
+    return reviewResult;
   }
 }
 

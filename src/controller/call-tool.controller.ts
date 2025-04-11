@@ -151,7 +151,29 @@ const callToolController = async (request: CallToolRequest) => {
           args.ignore_files
         );
 
-        if (review.approved) {
+        // Post the overall comment to the merge request
+        if (review.overallComment) {
+          await gitlabService.addMergeRequestComment(
+            args.project_id,
+            args.merge_request_iid,
+            review.overallComment
+          );
+        }
+
+        // Post specific comments as discussion threads
+        for (const comment of review.specificComments) {
+          await gitlabService.createDiscussion(
+            args.project_id,
+            args.merge_request_iid,
+            comment.comment,
+            comment.filePath,
+            comment.line
+          );
+        }
+
+        // Approve if score >= 8
+        const approved = review.score >= 8;
+        if (approved) {
           await gitlabService.approveMergeRequest(
             args.project_id,
             args.merge_request_iid
@@ -163,8 +185,11 @@ const callToolController = async (request: CallToolRequest) => {
                 text: JSON.stringify(
                   {
                     status: "approved",
+                    score: review.score,
+                    overallComment: review.overallComment,
+                    specificComments: review.specificComments,
                     message:
-                      "Merge request meets naming and coding standards. Approved successfully.",
+                      "Merge request meets standards (score ≥ 8). Approved.",
                   },
                   null,
                   2
@@ -173,23 +198,18 @@ const callToolController = async (request: CallToolRequest) => {
             ],
           };
         } else {
-          for (const comment of review.comments) {
-            await gitlabService.addMergeRequestComment(
-              args.project_id,
-              args.merge_request_iid,
-              comment
-            );
-          }
           return {
             content: [
               {
                 type: "text",
                 text: JSON.stringify(
                   {
-                    status: "comments_added",
-                    comments: review.comments,
+                    status: "needs_work",
+                    score: review.score,
+                    overallComment: review.overallComment,
+                    specificComments: review.specificComments,
                     message:
-                      "Merge request does not meet standards. Comments added.",
+                      "Merge request does not meet standards (score < 8). Comments added.",
                   },
                   null,
                   2

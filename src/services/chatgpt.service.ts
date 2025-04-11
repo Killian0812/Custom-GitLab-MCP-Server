@@ -1,5 +1,15 @@
 import axios from "axios";
 
+interface ReviewResult {
+  score: number; // 0–10
+  overallComment: string; // Single comment for the merge request
+  specificComments: Array<{
+    filePath: string;
+    line: number;
+    comment: string;
+  }>; // Comments for discussion threads
+}
+
 class ChatGptService {
   private apiUrl: string;
   private apiKey: string;
@@ -13,10 +23,8 @@ class ChatGptService {
     }
   }
 
-  async reviewChanges(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    changes: any[]
-  ): Promise<{ approved: boolean; comments: string[] }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async reviewChanges(changes: any[]): Promise<ReviewResult> {
     try {
       const response = await axios.post(
         `${this.apiUrl}/chat/completions`,
@@ -25,8 +33,14 @@ class ChatGptService {
           messages: [
             {
               role: "system",
-              content:
-                "You are a code reviewer. Analyze the following changes and provide feedback.",
+              content: `
+                You are a code reviewer. Analyze the provided code changes and return:
+                1. A score (0–10) based on code quality, naming, and standards.
+                2. A single overall comment summarizing the review.
+                3. Specific comments (if any) for individual changes, including file path, line number, and comment text.
+                Return the response as a JSON object with fields: score, overallComment, specificComments (array of { filePath, line, comment }).
+                If no specific comments are needed, return an empty specificComments array.
+              `,
             },
             {
               role: "user",
@@ -42,10 +56,11 @@ class ChatGptService {
         }
       );
 
-      const comments = response.data.choices[0].message.content.split("\n");
+      const result = JSON.parse(response.data.choices[0].message.content);
       return {
-        approved: comments.length === 0,
-        comments,
+        score: result.score,
+        overallComment: `${result.overallComment} Score: ${result.score}`,
+        specificComments: result.specificComments || [],
       };
     } catch (error) {
       console.error("Error while communicating with ChatGPT API:", error);
