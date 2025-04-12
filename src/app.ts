@@ -8,7 +8,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
-import logger from "./utils/logger";
 
 import {
   CreateOrUpdateFileSchema,
@@ -117,7 +116,6 @@ async function runServer() {
     app.use(express.json()); // Middleware to parse JSON requests
 
     app.get("/health", (req, res) => {
-      logger.info("Health check requested");
       const versionFilePath = join(__dirname, "..", "version.json");
       const versionData = JSON.parse(readFileSync(versionFilePath, "utf8"));
 
