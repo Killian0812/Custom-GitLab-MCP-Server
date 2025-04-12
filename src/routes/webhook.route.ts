@@ -63,8 +63,8 @@ router.post("/webhook", async (req, res) => {
 
     res.status(200).send("No action taken");
   } catch (error) {
-    console.error("Error handling webhook:", error);
-    res.status(500).send("Internal Server Error");
+    logger.error("Error handling webhook:", error);
+    res.status(200).send({ message: "Error handling webhook", error });
   }
 });
 
