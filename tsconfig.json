@@ -13,7 +13,8 @@
   },
   "include": [
     "src/**/*",
-    "config/**/*"
+    "config/**/*",
+    "version.json"
   ],
   "exclude": [
     "node_modules",
