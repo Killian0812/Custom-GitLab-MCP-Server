@@ -25,6 +25,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import callToolController from "./controller/call-tool.controller";
+import webhookRouter from "./controller/routes/webhook.route";
 
 const server = new Server(
   {
@@ -112,12 +113,17 @@ async function runServer() {
   } else {
     const app = express();
 
+    app.use(express.json()); // Middleware to parse JSON requests
+
     app.get("/health", (req, res) => {
       const versionFilePath = join(__dirname, "..", "version.json");
       const versionData = JSON.parse(readFileSync(versionFilePath, "utf8"));
 
       res.status(200).json({ version: versionData.version });
     });
+
+    // Register the webhook router
+    app.use("/api", webhookRouter);
 
     // SSE endpoint using SSEServerTransport
     app.get("/mcp/stream", async (req, res) => {
