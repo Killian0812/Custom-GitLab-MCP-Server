@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import bodyParser from "body-parser";
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
@@ -114,7 +115,7 @@ async function runServer() {
   } else {
     const app = express();
 
-    app.use(express.json()); // Middleware to parse JSON requests
+    app.use(bodyParser.json({ type: "application/json" }));
 
     app.get("/health", (req, res) => {
       const versionFilePath = join(__dirname, "..", "version.json");
