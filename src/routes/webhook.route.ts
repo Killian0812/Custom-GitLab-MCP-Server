@@ -11,7 +11,7 @@ router.post("/webhook", async (req, res) => {
     logger.info("Received webhook event:", JSON.stringify(req.body));
 
     if (event !== "Merge Request Hook") {
-      return res.status(400).send("Unsupported event type");
+      return res.status(200).send("Unsupported event type");
     }
 
     const { object_attributes, project } = req.body;
