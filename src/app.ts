@@ -25,7 +25,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import callToolController from "./controller/call-tool.controller";
-import webhookRouter from "./controller/routes/webhook.route";
+import webhookRouter from "./routes/webhook.route";
 
 const server = new Server(
   {
