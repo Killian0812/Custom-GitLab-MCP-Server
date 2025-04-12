@@ -559,20 +559,32 @@ class GitLabService {
     filePath: string,
     line: number
   ): Promise<void> {
-    if (!comment) return;
+    if (!comment) {
+      logger.info("No comment provided, skipping discussion creation");
+      return;
+    }
 
     try {
+      logger.info(`Attempting discussion for ${filePath}:${line}`);
+
       // Fetch merge request changes
       const changes = await this.getMergeRequestChanges(
         projectId,
         mergeRequestIid
       );
       if (!changes.diff_refs) {
-        throw new Error("No diff_refs found in merge request changes");
+        logger.error("No diff_refs found in merge request changes");
+        await this.addMergeRequestComment(
+          projectId,
+          mergeRequestIid,
+          `${comment} (Note: Failed to create discussion thread due to missing diff context)`
+        );
+        return;
       }
       const diffRefs = changes.diff_refs;
 
       // Find the diff for the specified filePath
+      logger.info("Searching for file:", filePath);
       const fileDiff = changes.changes.find(
         (change: any) =>
           change.new_path === filePath || change.old_path === filePath
@@ -586,30 +598,48 @@ class GitLabService {
         );
         return;
       }
+      logger.info("Found file diff:", {
+        new_path: fileDiff.new_path,
+        old_path: fileDiff.old_path,
+      });
 
-      // Validate line number
+      // Validate line number and find a fallback line
+      logger.info(`Validating line ${line} in ${filePath}`);
       const diffLines = fileDiff.diff.split("\n");
       let currentNewLine = 0;
       let found = false;
+      let firstValidLine = null; // Track the first valid new_line
+
       for (const diffLine of diffLines) {
-        if (diffLine.startsWith("+")) {
+        if (diffLine.startsWith("+") || !diffLine.startsWith("-")) {
           currentNewLine++;
+          if (firstValidLine === null) {
+            firstValidLine = currentNewLine; // Store the first valid line
+          }
           if (currentNewLine === line) {
             found = true;
             break;
           }
-        } else if (!diffLine.startsWith("-")) {
-          currentNewLine++;
         }
       }
+
+      let finalLine = line;
+
       if (!found) {
-        logger.error(`Line ${line} is not a new line in ${filePath}`);
-        await this.addMergeRequestComment(
-          projectId,
-          mergeRequestIid,
-          `${comment} (Note: Line ${line} in ${filePath} is not a new line in the diff)`
-        );
-        return;
+        if (firstValidLine !== null) {
+          logger.warn(
+            `Line ${line} is not a new line in ${filePath}, using line ${firstValidLine} instead`
+          );
+          finalLine = firstValidLine;
+        } else {
+          logger.error(`No valid new lines found in ${filePath} diff`);
+          await this.addMergeRequestComment(
+            projectId,
+            mergeRequestIid,
+            `${comment} (Note: No valid lines found in ${filePath} to create discussion)`
+          );
+          return;
+        }
       }
 
       const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
@@ -625,7 +655,7 @@ class GitLabService {
           position_type: "text",
           new_path: fileDiff.new_path,
           old_path: fileDiff.old_path || fileDiff.new_path,
-          new_line: line,
+          new_line: finalLine,
         },
       };
 
@@ -635,6 +665,9 @@ class GitLabService {
           "Content-Type": "application/json",
         },
       });
+      logger.info(
+        `Successfully created discussion for ${filePath}:${finalLine}`
+      );
     } catch (error: any) {
       logger.error(
         `Error creating discussion for ${filePath}:${line}:`,
