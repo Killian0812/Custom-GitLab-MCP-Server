@@ -1,6 +1,7 @@
 import express from "express";
 import { codeReviewService } from "../services/code-review.service";
 import logger from "../utils/logger";
+import { gitlabService } from "../services/gitlab.service";
 
 const router = express.Router();
 
@@ -24,14 +25,39 @@ router.post("/webhook", async (req, res) => {
       const mergeRequestIid = object_attributes.iid;
 
       // Trigger the review_code tool
-      const reviewResult = await codeReviewService.reviewCode(
+      const review = await codeReviewService.reviewCode(
         projectId,
         mergeRequestIid
       );
 
+      // Post the overall comment to the merge request
+      if (review.overallComment) {
+        await gitlabService.addMergeRequestComment(
+          projectId,
+          mergeRequestIid,
+          review.overallComment
+        );
+      }
+
+      // Post specific comments as discussion threads
+      for (const comment of review.specificComments) {
+        await gitlabService.createDiscussion(
+          projectId,
+          mergeRequestIid,
+          comment.comment,
+          comment.filePath,
+          comment.line
+        );
+      }
+
+      // Approve if score >= 8
+      const approved = review.score >= 8;
+      if (approved)
+        await gitlabService.approveMergeRequest(projectId, mergeRequestIid);
+
       return res.status(200).json({
-        message: "Code review triggered successfully",
-        reviewResult,
+        message: "Code review triggered successfully. Action taken.",
+        review,
       });
     }
 
