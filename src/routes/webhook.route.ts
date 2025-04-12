@@ -1,11 +1,13 @@
 import express from "express";
 import { codeReviewService } from "../services/code-review.service";
+import logger from "../utils/logger";
 
 const router = express.Router();
 
 router.post("/webhook", async (req, res) => {
   try {
     const event = req.headers["x-gitlab-event"];
+    logger.info("Received webhook event:", JSON.stringify(req.body));
 
     if (event !== "Merge Request Hook") {
       return res.status(400).send("Unsupported event type");
