@@ -26,6 +26,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import callToolController from "./controller/call-tool.controller";
 import webhookRouter from "./routes/webhook.route";
+import logger from "./utils/logger";
 
 const server = new Server(
   {
@@ -127,8 +128,10 @@ async function runServer() {
 
     // SSE endpoint using SSEServerTransport
     app.get("/mcp/stream", async (req, res) => {
+      logger.info("MCP client requesting connection", req.socket.remoteAddress);
       const transport = new SSEServerTransport("/mcp/messages", res);
       await server.connect(transport);
+      logger.info("MCP client connected", req.socket.remoteAddress);
 
       res.on("close", () => {
         server.close();
