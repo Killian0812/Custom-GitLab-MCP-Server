@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import bodyParser from "body-parser";
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
@@ -25,6 +26,8 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import callToolController from "./controller/call-tool.controller";
+import webhookRouter from "./routes/webhook.route";
+import logger from "./utils/logger";
 
 const server = new Server(
   {
@@ -112,6 +115,8 @@ async function runServer() {
   } else {
     const app = express();
 
+    app.use(bodyParser.json({ type: "application/json" }));
+
     app.get("/health", (req, res) => {
       const versionFilePath = join(__dirname, "..", "version.json");
       const versionData = JSON.parse(readFileSync(versionFilePath, "utf8"));
@@ -119,10 +124,15 @@ async function runServer() {
       res.status(200).json({ version: versionData.version });
     });
 
+    // Register the webhook router
+    app.use("/api", webhookRouter);
+
     // SSE endpoint using SSEServerTransport
     app.get("/mcp/stream", async (req, res) => {
+      logger.info("MCP client requesting connection", req.socket.remoteAddress);
       const transport = new SSEServerTransport("/mcp/messages", res);
       await server.connect(transport);
+      logger.info("MCP client connected", req.socket.remoteAddress);
 
       res.on("close", () => {
         server.close();

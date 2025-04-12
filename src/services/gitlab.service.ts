@@ -28,13 +28,14 @@ import {
   GitLabRepository,
   FileOperation,
 } from "../schemas";
+import logger from "../utils/logger";
 
 const GITLAB_PERSONAL_ACCESS_TOKEN = process.env.GITLAB_PERSONAL_ACCESS_TOKEN;
 const GITLAB_API_URL =
   process.env.GITLAB_API_URL || "https://gitlab.com/api/v4";
 
 if (!GITLAB_PERSONAL_ACCESS_TOKEN) {
-  console.error("GITLAB_PERSONAL_ACCESS_TOKEN environment variable is not set");
+  logger.error("GITLAB_PERSONAL_ACCESS_TOKEN environment variable is not set");
   process.exit(1);
 }
 
@@ -63,13 +64,13 @@ class GitLabService {
       return GitLabForkSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in forkProject:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in forkProject:", error);
+      logger.error("Error in forkProject:", error);
       throw error;
     }
   }
@@ -98,13 +99,13 @@ class GitLabService {
       return GitLabReferenceSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createBranch:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createBranch:", error);
+      logger.error("Error in createBranch:", error);
       throw error;
     }
   }
@@ -124,13 +125,13 @@ class GitLabService {
       return project.default_branch;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in getDefaultBranchRef:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in getDefaultBranchRef:", error);
+      logger.error("Error in getDefaultBranchRef:", error);
       throw error;
     }
   }
@@ -164,13 +165,13 @@ class GitLabService {
       return data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in getFileContents:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in getFileContents:", error);
+      logger.error("Error in getFileContents:", error);
       throw error;
     }
   }
@@ -200,13 +201,13 @@ class GitLabService {
       return GitLabIssueSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createIssue:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createIssue:", error);
+      logger.error("Error in createIssue:", error);
       throw error;
     }
   }
@@ -239,13 +240,13 @@ class GitLabService {
       return GitLabMergeRequestSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createMergeRequest:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createMergeRequest:", error);
+      logger.error("Error in createMergeRequest:", error);
       throw error;
     }
   }
@@ -293,13 +294,13 @@ class GitLabService {
       return GitLabCreateUpdateFileResponseSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createOrUpdateFile:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createOrUpdateFile:", error);
+      logger.error("Error in createOrUpdateFile:", error);
       throw error;
     }
   }
@@ -332,13 +333,13 @@ class GitLabService {
       return GitLabTreeSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createTree:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createTree:", error);
+      logger.error("Error in createTree:", error);
       throw error;
     }
   }
@@ -374,13 +375,13 @@ class GitLabService {
       return GitLabCommitSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createCommit:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createCommit:", error);
+      logger.error("Error in createCommit:", error);
       throw error;
     }
   }
@@ -409,13 +410,13 @@ class GitLabService {
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in searchProjects:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in searchProjects:", error);
+      logger.error("Error in searchProjects:", error);
       throw error;
     }
   }
@@ -443,13 +444,13 @@ class GitLabService {
       return GitLabRepositorySchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in createRepository:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in createRepository:", error);
+      logger.error("Error in createRepository:", error);
       throw error;
     }
   }
@@ -473,13 +474,13 @@ class GitLabService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in getMergeRequestChanges:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in getMergeRequestChanges:", error);
+      logger.error("Error in getMergeRequestChanges:", error);
       throw error;
     }
   }
@@ -505,13 +506,13 @@ class GitLabService {
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in approveMergeRequest:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in approveMergeRequest:", error);
+      logger.error("Error in approveMergeRequest:", error);
       throw error;
     }
   }
@@ -540,13 +541,13 @@ class GitLabService {
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
+        logger.error(
           "Axios error in addMergeRequestComment:",
           error.response?.data || error.message
         );
         return Promise.reject(error.response?.data || error.message);
       }
-      console.error("Error in addMergeRequestComment:", error);
+      logger.error("Error in addMergeRequestComment:", error);
       throw error;
     }
   }
@@ -558,35 +559,87 @@ class GitLabService {
     filePath: string,
     line: number
   ): Promise<void> {
-    if (!comment) return;
+    if (!comment) {
+      logger.info("No comment provided, skipping discussion creation");
+      return;
+    }
 
     try {
-      // Fetch merge request changes to get diff context
+      logger.info(`Attempting discussion for ${filePath}:${line}`);
+
+      // Fetch merge request changes
       const changes = await this.getMergeRequestChanges(
         projectId,
         mergeRequestIid
       );
-      const diffRefs = changes.diff_refs;
-
-      // Find the diff for the specified filePath
-      const fileDiff = changes.changes.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (change: any) =>
-          change.new_path === filePath || change.old_path === filePath
-      );
-
-      if (!fileDiff) return;
-
-      // Validate line number (basic check; GitLab API will validate further)
-      const isNewLine = fileDiff.diff.includes(`+`);
-      if (!isNewLine) {
-        // If no new lines in diff, fall back to regular comment
+      if (!changes.diff_refs) {
+        logger.error("No diff_refs found in merge request changes");
         await this.addMergeRequestComment(
           projectId,
           mergeRequestIid,
-          `${comment} (Note: Could not create discussion thread for ${filePath}:${line} as no new lines found)`
+          `${comment} (Note: Failed to create discussion thread due to missing diff context)`
         );
         return;
+      }
+      const diffRefs = changes.diff_refs;
+
+      // Find the diff for the specified filePath
+      logger.info("Searching for file:", filePath);
+      const fileDiff = changes.changes.find(
+        (change: any) =>
+          change.new_path === filePath || change.old_path === filePath
+      );
+      if (!fileDiff) {
+        logger.error(`File ${filePath} not found in merge request changes`);
+        await this.addMergeRequestComment(
+          projectId,
+          mergeRequestIid,
+          `${comment} (Note: File ${filePath} not found in diff)`
+        );
+        return;
+      }
+      logger.info("Found file diff:", {
+        new_path: fileDiff.new_path,
+        old_path: fileDiff.old_path,
+      });
+
+      // Validate line number and find a fallback line
+      logger.info(`Validating line ${line} in ${filePath}`);
+      const diffLines = fileDiff.diff.split("\n");
+      let currentNewLine = 0;
+      let found = false;
+      let firstValidLine = null; // Track the first valid new_line
+
+      for (const diffLine of diffLines) {
+        if (diffLine.startsWith("+") || !diffLine.startsWith("-")) {
+          currentNewLine++;
+          if (firstValidLine === null) {
+            firstValidLine = currentNewLine; // Store the first valid line
+          }
+          if (currentNewLine === line) {
+            found = true;
+            break;
+          }
+        }
+      }
+
+      let finalLine = line;
+
+      if (!found) {
+        if (firstValidLine !== null) {
+          logger.warn(
+            `Line ${line} is not a new line in ${filePath}, using line ${firstValidLine} instead`
+          );
+          finalLine = firstValidLine;
+        } else {
+          logger.error(`No valid new lines found in ${filePath} diff`);
+          await this.addMergeRequestComment(
+            projectId,
+            mergeRequestIid,
+            `${comment} (Note: No valid lines found in ${filePath} to create discussion)`
+          );
+          return;
+        }
       }
 
       const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(
@@ -600,40 +653,31 @@ class GitLabService {
           start_sha: diffRefs.start_sha,
           head_sha: diffRefs.head_sha,
           position_type: "text",
-          new_path: filePath,
-          new_line: line,
+          new_path: fileDiff.new_path,
+          old_path: fileDiff.old_path || fileDiff.new_path,
+          new_line: finalLine,
         },
       };
 
-      try {
-        await axios.post(url, body, {
-          headers: {
-            Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        });
-      } catch (error) {
-        // If discussion creation fails (e.g., invalid line), fall back to regular comment
-        console.error(
-          `Failed to create discussion for ${filePath}:${line}:`,
-          error
-        );
-        await this.addMergeRequestComment(
-          projectId,
-          mergeRequestIid,
-          `${comment} (Note: Failed to create discussion thread for ${filePath}:${line})`
-        );
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(
-          "Axios error in createDiscussion:",
-          error.response?.data || error.message
-        );
-        return Promise.reject(error.response?.data || error.message);
-      }
-      console.error("Error in createDiscussion:", error);
-      throw error;
+      await axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${GITLAB_PERSONAL_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+      logger.info(
+        `Successfully created discussion for ${filePath}:${finalLine}`
+      );
+    } catch (error: any) {
+      logger.error(
+        `Error creating discussion for ${filePath}:${line}:`,
+        error.response?.data || error.message
+      );
+      await this.addMergeRequestComment(
+        projectId,
+        mergeRequestIid,
+        `${comment} (Note: Failed to create discussion thread for ${filePath}:${line})`
+      );
     }
   }
 }
