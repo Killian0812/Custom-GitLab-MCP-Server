@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/killian0812-custom-gitlab-mcp-server-badge.png)](https://mseep.ai/app/killian0812-custom-gitlab-mcp-server)
+
 # GitLab MR Reviewer
 
 An AI-powered GitLab Merge Request code reviewer that integrates with Anthropic's Claude models to provide automated code reviews and checklist compliance evaluation.
